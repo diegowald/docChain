@@ -18,6 +18,16 @@ void Link::setId(const uint64_t &id) {
     _id = id;
 }
 
+QDateTime Link::creation() const
+{
+    return _creation;
+}
+
+void Link::setCreation(const QDateTime &moment)
+{
+    _creation = moment;
+}
+
 QByteArray Link::author() const
 {
     return _author;

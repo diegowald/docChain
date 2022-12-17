@@ -17,6 +17,7 @@ void InMemoryBlockChain::add(QSharedPointer<Link> link)
 {
     ++_lastId;
     link->setId(_lastId);
+    link->setCreation(QDateTime::currentDateTimeUtc());
     _block[_lastId] = link;
     _idxBySignature[link->signature()] = _lastId;
 }
