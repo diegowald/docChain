@@ -1,5 +1,7 @@
 #include "signingmanager.h"
 
+#include <QMutexLocker>
+
 #include "signingcalculation.h"
 
 SigningManager::SigningManager(QObject *parent)
@@ -17,13 +19,14 @@ QByteArray SigningManager::createSignature(const QByteArray &author, const QByte
 {
     SigningCalculation calculator;
 
+    QMutexLocker locker(&_createMutex);
     auto lastId = _blockchain.getLastId();
     auto lastLink = _blockchain.findById(lastId);
-
     auto signature = calculate(lastId, author, payload);
 
     QSharedPointer<Link> link = QSharedPointer<Link>::create(author, signature);
     _blockchain.add(link);
+
     return signature;
 }
 

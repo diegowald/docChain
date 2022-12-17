@@ -2,6 +2,8 @@
 #define SIGNINGMANAGER_H
 
 #include <QObject>
+#include <QMutex>
+
 #include "inmemoryblockchain.h"
 
 class SigningManager : public QObject
@@ -21,6 +23,7 @@ signals:
 
 private:
     InMemoryBlockChain _blockchain;
+    QMutex _createMutex;
 };
 
 #endif // SIGNINGMANAGER_H
