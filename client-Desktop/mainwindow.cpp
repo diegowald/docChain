@@ -48,7 +48,20 @@ void MainWindow::on_txtPyload_textChanged()
 void MainWindow::on_btnCheckIsValid_clicked()
 {
     QByteArray signature = QByteArray::fromHex(ui->txtResult->text().toUtf8());
-    bool result = _signMgr.isValidSignature(_payload, signature);
-    ui->lblIsValid->setText(result ? tr("Valid signature") : tr("Invalid signature"));
+    auto result = _signMgr.isValidSignature(_payload, signature);
+    QString txt = "";
+    switch (result) {
+    case SigningManager::SignatureValidation::InvalidSignature:
+        txt = tr("Invalid signature");
+        break;
+    case SigningManager::SignatureValidation::NonExistentSignature:
+        txt = tr("Nonexistent signature");
+        break;
+    case SigningManager::SignatureValidation::ValidSignature:
+        txt = tr("Valid signature");
+        break;
+    }
+
+    ui->lblIsValid->setText(txt);
 }
 

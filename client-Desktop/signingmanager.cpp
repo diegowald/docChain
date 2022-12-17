@@ -44,14 +44,17 @@ QByteArray SigningManager::calculate(uint64_t lastId, const QByteArray &author, 
     return signature;
 }
 
-bool SigningManager::isValidSignature(const QByteArray &payload, const QByteArray &signature) {
+SigningManager::SignatureValidation SigningManager::isValidSignature(const QByteArray &payload, const QByteArray &signature) {
     bool result = false;
 
     auto link = _blockchain.findBySignature(signature);
     if (link != nullptr) {
         auto calculatedSignature = calculate(link->id() - 1, link->author(), payload);
-        return calculatedSignature == signature;
+        if (calculatedSignature != signature) {
+            return SignatureValidation::InvalidSignature;
+        }
+        return SignatureValidation::ValidSignature;
     }
 
-    return result;
+    return SignatureValidation::NonExistentSignature;
 }

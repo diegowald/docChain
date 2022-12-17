@@ -10,6 +10,11 @@ class SigningManager : public QObject
 {
     Q_OBJECT
 public:
+    enum class SignatureValidation {
+        ValidSignature,
+        NonExistentSignature,
+        InvalidSignature
+    };
     explicit SigningManager(QObject *parent = nullptr);
 
     virtual ~SigningManager();
@@ -17,7 +22,7 @@ public:
     QByteArray createSignature(const QByteArray &author, const QByteArray &payload);
     QByteArray calculate(uint64_t lastId, const QByteArray &author, const QByteArray &payload);
 
-    bool isValidSignature(const QByteArray &payload, const QByteArray &signature);
+    SignatureValidation isValidSignature(const QByteArray &payload, const QByteArray &signature);
 
 signals:
 
