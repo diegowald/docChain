@@ -3,7 +3,8 @@
 
 #include <QFileDialog>
 #include <QFile>
-
+#include <QDebug>
+#include <QElapsedTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -34,7 +35,16 @@ void MainWindow::on_btnOpenFile_clicked()
 
 void MainWindow::on_btnChainIt_clicked()
 {
-    QByteArray result = _signMgr.createSignature(QByteArray(), _payload);
+    QElapsedTimer timer;
+    timer.start();
+
+    QByteArray result;
+    int count = 100000;
+    for (int i = 0; i < count; ++i) {
+        result = _signMgr.createSignature(QByteArray(), _payload);
+    }
+
+    qDebug() << "Tiempo en realizar " << count << " operciones: " << timer.elapsed();
     ui->txtResult->setText(result.toHex());
 }
 
