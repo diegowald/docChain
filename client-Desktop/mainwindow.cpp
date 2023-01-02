@@ -5,12 +5,17 @@
 #include <QFile>
 #include <QDebug>
 #include <QElapsedTimer>
+#include "signinghandler.h"
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    _signingHandler = new SigningHandler("http://localhost:8080", this);
+    connect(_signingHandler, &SigningHandler::signatureCreated, this, &MainWindow::on_signatureCreated);
+    connect(_signingHandler, &SigningHandler::validateSignatureResult, this, &MainWindow::on_validateSignatureResult);
 }
 
 MainWindow::~MainWindow()
@@ -35,17 +40,8 @@ void MainWindow::on_btnOpenFile_clicked()
 
 void MainWindow::on_btnChainIt_clicked()
 {
-    QElapsedTimer timer;
-    timer.start();
-
     QByteArray result;
-    int count = 100000;
-    for (int i = 0; i < count; ++i) {
-        result = _signMgr.createSignature(QByteArray(), _payload);
-    }
-
-    qDebug() << "Tiempo en realizar " << count << " operciones: " << timer.elapsed();
-    ui->txtResult->setText(result.toHex());
+    _signingHandler->createSignature(QByteArray(), _payload);
 }
 
 
@@ -58,20 +54,28 @@ void MainWindow::on_txtPyload_textChanged()
 void MainWindow::on_btnCheckIsValid_clicked()
 {
     QByteArray signature = QByteArray::fromHex(ui->txtResult->text().toUtf8());
-    auto result = _signMgr.isValidSignature(_payload, signature);
+    _signingHandler->validateSignature(_payload, signature);
+}
+
+void MainWindow::on_signatureCreated(const QByteArray signature)
+{
+    ui->txtResult->setText(signature.toHex());
+}
+
+void MainWindow::on_validateSignatureResult(const SigningHandler::SignatureValidation response)
+{
     QString txt = "";
-    switch (result) {
-    case SigningManager::SignatureValidation::InvalidSignature:
+    switch (response) {
+    case SigningHandler::SignatureValidation::InvalidSignature:
         txt = tr("Invalid signature");
         break;
-    case SigningManager::SignatureValidation::NonExistentSignature:
+    case SigningHandler::SignatureValidation::NonExistentSignature:
         txt = tr("Nonexistent signature");
         break;
-    case SigningManager::SignatureValidation::ValidSignature:
+    case SigningHandler::SignatureValidation::ValidSignature:
         txt = tr("Valid signature");
         break;
     }
 
     ui->lblIsValid->setText(txt);
 }
-
