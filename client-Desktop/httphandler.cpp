@@ -17,7 +17,7 @@ HttpHandler::~HttpHandler()
 {}
 
 
-QUrl HttpHandler::mergeUrl(QString endpoint)
+QUrl HttpHandler::mergeUrl(const QString &endpoint)
 {
     QString temp = _url.toString();
     temp = temp + "/" + endpoint;
@@ -25,17 +25,20 @@ QUrl HttpHandler::mergeUrl(QString endpoint)
     return QUrl(temp);
 }
 
-void HttpHandler::requestPOST(QString label, QString endpoint, QJsonDocument payload)
+void HttpHandler::requestPOST(const QString& label, const QString& endpoint, const QMap<QString, QString>& headers, const QJsonDocument& payload)
 {
     qDebug() << "POST request";
     QNetworkRequest request;
 
     request.setUrl(mergeUrl(endpoint));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
+    for(QString& k: headers.keys()) {
+        request.setRawHeader(k.toUtf8(), headers[k].toUtf8());
+    }
     //adding payload and send request
     QByteArray data = payload.toJson();
     qDebug() << "Performing POST now";
+    qDebug() << "data: " << data;
     _netReply = _netManager->post(request, data);
 
     connect(_netReply, &QIODevice::readyRead, this, &HttpHandler::dataReadyRead);
@@ -43,13 +46,15 @@ void HttpHandler::requestPOST(QString label, QString endpoint, QJsonDocument pay
     _endpointsSignals[request.url().toString()] = label;
 }
 
-void HttpHandler::requestGET(QString label, QString endpoint, QJsonDocument payload)
+void HttpHandler::requestGET(const QString &label, const QString &endpoint, const QMap<QString, QString>& headers, const QJsonDocument &payload)
 {
     qDebug() << "GET request";
     QNetworkRequest request;
     request.setUrl(mergeUrl(endpoint));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
+    for(QString k: headers.keys()) {
+        request.setRawHeader(k.toUtf8(), headers[k].toUtf8());
+    }
     _netReply = _netManager->get(request);
 
     connect(_netReply, &QIODevice::readyRead, this, &HttpHandler::dataReadyRead);
@@ -68,17 +73,14 @@ void HttpHandler::dataReadFinished()
     int responseCode = status_code.toString().toInt();
     qDebug() << "Status Code: " << responseCode;
 
-    if(_netReply->error())
-    {
+    if(_netReply->error()) {
         qInfo() << "An error in HTTP request occured: " << _netReply->errorString();
-    }
-    else{
+    } else {
         QJsonParseError jsonError;
         //qDebug()<< "Incoming data";
         QJsonDocument response = QJsonDocument::fromJson(*_dataBuffer, &jsonError);
-
-        if(jsonError.error != QJsonParseError::NoError)
-        {
+        qDebug() << *_dataBuffer;
+        if(jsonError.error != QJsonParseError::NoError) {
             qDebug()<< jsonError.errorString();
         }
         //qDebug().noquote() << response.toJson();
@@ -86,6 +88,7 @@ void HttpHandler::dataReadFinished()
         emit receivedData(label, response, responseCode);
         _netReply->deleteLater();
     }
+    _dataBuffer->clear();
 }
 
 

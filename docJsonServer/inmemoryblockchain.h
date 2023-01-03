@@ -4,20 +4,24 @@
 #include <QObject>
 #include <QHash>
 #include <QSharedPointer>
-#include "link.h"
+#include "iblockchain.h"
 
-class InMemoryBlockChain : public QObject
+class InMemoryBlockChain : public QObject, public IBlockChain
 {
     Q_OBJECT
 public:
     explicit InMemoryBlockChain(QObject *parent = nullptr);
     virtual ~InMemoryBlockChain();
 
-    uint64_t getLastId() const;
-    void add(QSharedPointer<Link> link);
-    QSharedPointer<Link> findById(uint64_t id);
-    QSharedPointer<Link> findBySignature(const QByteArray &signature);
+    uint64_t getLastId() const override;
+    void add(QSharedPointer<Link> link) override;
+    QSharedPointer<Link> findById(uint64_t id) override;
+    QSharedPointer<Link> findBySignature(const QByteArray &signature) override;
 signals:
+
+private:
+    void loadFromDisk();
+    void saveToDisk();
 
 private:
     QHash<uint64_t, QSharedPointer<Link>> _block;

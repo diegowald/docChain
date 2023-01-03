@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
 
     httpServer.route("/v1/createSignature", QHttpServerRequest::Method::Post,
                      [&signingMgr](const QHttpServerRequest &request) {
-        /*if (!checkApiKeyHeader(request.headers())) {
+        if (!checkApiKeyHeader(request.headers())) {
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
-        }*/
+        }
         const auto json = byteArrayToJsonObject(request.body());
         if (!json || !json->contains("author") || !json->contains("payload")){
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
@@ -58,9 +58,9 @@ int main(int argc, char *argv[])
 
     httpServer.route("/v1/isValidSignature", QHttpServerRequest::Method::Post,
                      [&signingMgr](const QHttpServerRequest &request) {
-        /*if (!checkApiKeyHeader(request.headers())) {
+        if (!checkApiKeyHeader(request.headers())) {
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
-        }*/
+        }
         const auto json = byteArrayToJsonObject(request.body());
         if (!json || !json->contains("signature") || !json->contains("payload")){
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);

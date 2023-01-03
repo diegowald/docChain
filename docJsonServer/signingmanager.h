@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QMutex>
 
-#include "inmemoryblockchain.h"
+class IBlockChain;
 
 class SigningManager : public QObject
 {
@@ -29,7 +29,7 @@ private:
 signals:
 
 private:
-    InMemoryBlockChain _blockchain;
+    IBlockChain *_blockchain;
     QMutex _createMutex;
 };
 

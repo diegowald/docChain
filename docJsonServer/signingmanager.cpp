@@ -3,11 +3,13 @@
 #include <QMutexLocker>
 
 #include "signingcalculation.h"
+#include "iblockchain.h"
+#include "inmemoryblockchain.h"
 
 SigningManager::SigningManager(QObject *parent)
     : QObject{parent}
 {
-
+    _blockchain = new InMemoryBlockChain(this);
 }
 
 
@@ -20,12 +22,12 @@ QByteArray SigningManager::createSignature(const QByteArray &author, const QByte
     SigningCalculation calculator;
 
     QMutexLocker locker(&_createMutex);
-    auto lastId = _blockchain.getLastId();
-    auto lastLink = _blockchain.findById(lastId);
+    auto lastId = _blockchain->getLastId();
+    auto lastLink = _blockchain->findById(lastId);
     auto signature = calculate(lastId, author, payload);
 
     QSharedPointer<Link> link = QSharedPointer<Link>::create(author, signature);
-    _blockchain.add(link);
+    _blockchain->add(link);
 
     return signature;
 }
@@ -34,7 +36,7 @@ QByteArray SigningManager::calculate(uint64_t lastId, const QByteArray &author, 
 {
     SigningCalculation calculator;
 
-    auto lastLink = _blockchain.findById(lastId);
+    auto lastLink = _blockchain->findById(lastId);
     QByteArray lastSignature;
     if (lastLink != nullptr) {
         lastSignature = lastLink->signature();
@@ -47,7 +49,7 @@ QByteArray SigningManager::calculate(uint64_t lastId, const QByteArray &author, 
 SigningManager::SignatureValidation SigningManager::isValidSignature(const QByteArray &payload, const QByteArray &signature) {
     bool result = false;
 
-    auto link = _blockchain.findBySignature(signature);
+    auto link = _blockchain->findBySignature(signature);
     if (link != nullptr) {
         auto calculatedSignature = calculate(link->id() - 1, link->author(), payload);
         if (calculatedSignature != signature) {

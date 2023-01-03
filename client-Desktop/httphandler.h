@@ -36,9 +36,9 @@ private:
     QUrl _url;
 
 protected: //functions
-    QUrl mergeUrl(QString endpoint);
-    void requestPOST(QString label, QString endpoint, QJsonDocument payload);
-    void requestGET(QString label, QString endpoint, QJsonDocument payload);
+    QUrl mergeUrl(const QString &endpoint);
+    void requestPOST(const QString &label, const QString &endpoint, const QMap<QString, QString>& headers, const QJsonDocument& payload);
+    void requestGET(const QString &label, const QString &endpoint, const QMap<QString, QString> &headers, const QJsonDocument& payload);
 
 private:
     QHash<QString, QString> _endpointsSignals;

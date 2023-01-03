@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    _signingHandler = new SigningHandler("http://localhost:8080", this);
+    _signingHandler = new SigningHandler("http://45.79.200.52:8080", this);
     connect(_signingHandler, &SigningHandler::signatureCreated, this, &MainWindow::on_signatureCreated);
     connect(_signingHandler, &SigningHandler::validateSignatureResult, this, &MainWindow::on_validateSignatureResult);
 }
@@ -40,7 +40,6 @@ void MainWindow::on_btnOpenFile_clicked()
 
 void MainWindow::on_btnChainIt_clicked()
 {
-    QByteArray result;
     _signingHandler->createSignature(QByteArray(), _payload);
 }
 
