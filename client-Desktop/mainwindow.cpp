@@ -13,7 +13,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    _signingHandler = new SigningHandler("http://45.79.200.52:8080", this);
+    //_signingHandler = new SigningHandler("http://45.79.200.52:8080", this);
+    _signingHandler = new SigningHandler("http://127.0.0.1:8080", this);
     connect(_signingHandler, &SigningHandler::signatureCreated, this, &MainWindow::on_signatureCreated);
     connect(_signingHandler, &SigningHandler::validateSignatureResult, this, &MainWindow::on_validateSignatureResult);
 }
@@ -78,3 +79,24 @@ void MainWindow::on_validateSignatureResult(const SigningHandler::SignatureValid
 
     ui->lblIsValid->setText(txt);
 }
+
+void MainWindow::on_btnLogin_clicked()
+{
+    QString email = ui->txtEmail->text();
+    QString password = ui->txtPassword->text();
+
+    if ((email.length() > 0) && (password.length() > 0)) {
+        _signingHandler->login(email, password);
+    }
+}
+
+
+void MainWindow::on_btnAddUser_clicked()
+{
+    QString email = ui->txtEmail->text();
+    QString password = ui->txtPassword->text();
+    if ((email.length() > 0) && (password.length() > 0)) {
+        _signingHandler->addUser(email, password);
+    }
+}
+

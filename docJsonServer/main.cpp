@@ -15,6 +15,16 @@ static bool checkApiKeyHeader(const QList<QPair<QByteArray, QByteArray>> &header
     return false;
 }
 
+static bool isLoggedIn(const QList<QPair<QByteArray, QByteArray>> &headers, SigningManager &signingManager)
+{
+    for (const auto &[key, value] : headers) {
+        if (key == "token") {
+            return signingManager.isValidToken(value);
+        }
+    }
+    return false;
+}
+
 static std::optional<QJsonObject> byteArrayToJsonObject(const QByteArray &arr)
 {
     QJsonParseError err;
@@ -31,13 +41,15 @@ int main(int argc, char *argv[])
 
     SigningManager signingMgr;
 
-    //QMap<qint64, ContactEntry> contacts;
     // Setup QHttpServer
     QHttpServer httpServer;
 
     httpServer.route("/v1/createSignature", QHttpServerRequest::Method::Post,
                      [&signingMgr](const QHttpServerRequest &request) {
         if (!checkApiKeyHeader(request.headers())) {
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
+        }
+        if (!isLoggedIn(request.headers(), signingMgr)) {
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
         const auto json = byteArrayToJsonObject(request.body());
@@ -61,6 +73,9 @@ int main(int argc, char *argv[])
         if (!checkApiKeyHeader(request.headers())) {
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
+        if (!isLoggedIn(request.headers(), signingMgr)) {
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
+        }
         const auto json = byteArrayToJsonObject(request.body());
         if (!json || !json->contains("signature") || !json->contains("payload")){
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
@@ -75,6 +90,66 @@ int main(int argc, char *argv[])
         jsonResult.insert("result", QJsonValue((short)result));
 
         return QHttpServerResponse(jsonResult, QHttpServerResponder::StatusCode::Accepted);
+    });
+
+    httpServer.route("/v1/login1", QHttpServerRequest::Method::Post,
+                     [&signingMgr](const QHttpServerRequest &request) {
+        if (!checkApiKeyHeader(request.headers())) {
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
+        }
+        const auto json = byteArrayToJsonObject(request.body());
+        if (!json || !json->contains("email")){
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
+        }
+        QString email = json->value("email").toString();
+        auto result = signingMgr.challenge(email);
+        if (result.first) {
+            QJsonObject jsonResult;
+            jsonResult.insert("challenge", QJsonValue(result.second));
+            return QHttpServerResponse(jsonResult, QHttpServerResponder::StatusCode::Accepted);
+        }
+        return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
+    });
+
+    httpServer.route("/v1/login2", QHttpServerRequest::Method::Post,
+                     [&signingMgr](const QHttpServerRequest &request) {
+        if (!checkApiKeyHeader(request.headers())) {
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
+        }
+        const auto json = byteArrayToJsonObject(request.body());
+        if (!json || !json->contains("email") || !json->contains("challengeResult")){
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
+        }
+        QString email = json->value("email").toString();
+        QString challengeResult = json->value("challengeResult").toString();
+        auto result = signingMgr.validateChallenge(email, challengeResult);
+        if (result.first) {
+            QJsonObject jsonResult;
+            jsonResult.insert("response", result.second);
+            return QHttpServerResponse(jsonResult, QHttpServerResponder::StatusCode::Accepted);
+        } else {
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
+        }
+    });
+
+    httpServer.route("/v1/addUser", QHttpServerRequest::Method::Post,
+                     [&signingMgr](const QHttpServerRequest &request) {
+        if (!checkApiKeyHeader(request.headers())) {
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
+        }
+
+        if (signingMgr.hasAuthors() && !isLoggedIn(request.headers(), signingMgr)) {
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
+        }
+
+        const auto json = byteArrayToJsonObject(request.body());
+        if (!json || !json->contains("email") || !json->contains("password")){
+            return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
+        }
+        QString email = json->value("email").toString();
+        QString password = json->value("password").toString();
+        signingMgr.addUser(email, password);
+        return QHttpServerResponse(QJsonObject(), QHttpServerResponder::StatusCode::Accepted);
     });
 
     const auto port = httpServer.listen(QHostAddress::Any, 8080);

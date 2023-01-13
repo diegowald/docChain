@@ -5,11 +5,16 @@
 #include "signingcalculation.h"
 #include "iblockchain.h"
 #include "inmemoryblockchain.h"
+#include "iauthors.h"
+#include "inmemoryauthors.h"
+#include "authorfacade.h"
+
 
 SigningManager::SigningManager(QObject *parent)
     : QObject{parent}
 {
     _blockchain = new InMemoryBlockChain(this);
+    _authors = new InMemoryAuthors(this);
 }
 
 
@@ -60,3 +65,32 @@ SigningManager::SignatureValidation SigningManager::isValidSignature(const QByte
 
     return SignatureValidation::NonExistentSignature;
 }
+
+const QPair<bool, QString> SigningManager::challenge(const QString &email)
+{
+    return _authors->challenge(email);
+}
+
+const QPair<bool, QString> SigningManager::validateChallenge(const QString &email, const QString &challengeResult)
+{
+    return _authors->validateChallenge(email, challengeResult);
+}
+
+const bool SigningManager::isValidToken(const QString &token)
+{
+    return _authors->isValidToken(token);
+}
+
+const bool SigningManager::hasAuthors() const
+{
+    return _authors->hasAuthors();
+}
+
+void SigningManager::addUser(const QString &email, const QString &password)
+{
+    QSharedPointer<AuthorFacade> author = QSharedPointer<AuthorFacade>::create();
+    author->setEmail(email);
+    author->setPassword(password);
+    _authors->addAuthor(author);
+}
+

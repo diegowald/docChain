@@ -21,6 +21,10 @@ add_executable(docJsonServer
   link.h link.cpp
   inmemoryblockchain.h inmemoryblockchain.cpp
   iblockchain.h
+  iauthors.h iauthors.cpp
+  author.h author.cpp
+  inmemoryauthors.h inmemoryauthors.cpp
+  authorfacade.h authorfacade.cpp
 )
 
 target_link_libraries(docJsonServer Qt${QT_VERSION_MAJOR}::Core)

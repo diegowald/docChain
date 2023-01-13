@@ -30,6 +30,10 @@ private slots:
     void on_signatureCreated(const QByteArray signature);
     void on_validateSignatureResult(const SigningHandler::SignatureValidation response);
 
+    void on_btnLogin_clicked();
+
+    void on_btnAddUser_clicked();
+
 private:
     Ui::MainWindow *ui;
     QByteArray _payload;
