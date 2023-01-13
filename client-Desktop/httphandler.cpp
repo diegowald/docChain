@@ -85,8 +85,8 @@ void HttpHandler::dataReadFinished()
         }
         //qDebug().noquote() << response.toJson();
         QString label = _endpointsSignals[_netReply->url().toString()];
-        emit receivedData(label, response, responseCode);
         _netReply->deleteLater();
+        emit receivedData(label, response, responseCode);
     }
     _dataBuffer->clear();
 }

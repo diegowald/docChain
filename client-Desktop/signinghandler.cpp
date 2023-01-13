@@ -67,7 +67,7 @@ void SigningHandler::login2(const QString &email, const QString &challengeRespon
     jsonDoc.setObject(jsonObj);
     QMap<QString, QString> headers;
     headers["api_key"] = "SecretKey";
-    requestPOST("login1", "v1/login2", headers, jsonDoc);
+    requestPOST("login2", "v1/login2", headers, jsonDoc);
 }
 
 void SigningHandler::calculateResponse(const QString &challenge)
@@ -90,7 +90,6 @@ void SigningHandler::addUser(const QString &email, const QString &password)
     QMap<QString, QString> headers;
     headers["api_key"] = "SecretKey";
     requestPOST("addUser", "v1/addUser", headers, jsonDoc);
-
 }
 
 void SigningHandler::onReceivedData(QString label, QJsonDocument response, int repsonseCode)

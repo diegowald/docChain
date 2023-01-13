@@ -16,9 +16,9 @@ QPair<bool, QString> InMemoryAuthors::challenge(const QString &email)
 {
     QDateTime seed = QDateTime::currentDateTimeUtc();
     QPair<bool, QString> result;
-    if (_authors.contains(email)) {
+    if (_idxAuthorsByEmail.contains(email)) {
         result.first = true;
-        result.second = _authors[email]->challenge(seed);
+        result.second = _authors[_idxAuthorsByEmail[email]]->challenge(seed);
         ChallengeCreation cc;
         cc.challenge = result.second;
         cc.moment = seed;
