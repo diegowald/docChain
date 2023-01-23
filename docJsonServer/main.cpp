@@ -15,14 +15,19 @@ static bool checkApiKeyHeader(const QList<QPair<QByteArray, QByteArray>> &header
     return false;
 }
 
-static bool isLoggedIn(const QList<QPair<QByteArray, QByteArray>> &headers, SigningManager &signingManager)
+static QString token(const QList<QPair<QByteArray, QByteArray>> &headers)
 {
     for (const auto &[key, value] : headers) {
         if (key == "token") {
-            return signingManager.isValidToken(value);
+            return value;
         }
     }
-    return false;
+    return "";
+}
+
+static bool isLoggedIn(const QList<QPair<QByteArray, QByteArray>> &headers, SigningManager &signingManager)
+{
+    return signingManager.isValidToken(token(headers));
 }
 
 static std::optional<QJsonObject> byteArrayToJsonObject(const QByteArray &arr)
@@ -53,14 +58,13 @@ int main(int argc, char *argv[])
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
         const auto json = byteArrayToJsonObject(request.body());
-        if (!json || !json->contains("author") || !json->contains("payload")){
+        if (!json || !json->contains("payload")){
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
         }
 
-        QByteArray author = QByteArray::fromBase64(json->value("author").toString().toUtf8());
         QByteArray payload = QByteArray::fromBase64(json->value("payload").toString().toUtf8());
 
-        QByteArray result = signingMgr.createSignature(author, payload);
+        QByteArray result = signingMgr.createSignature(token(request.headers()).toUtf8(), payload);
 
         QJsonObject jsonResult;
         jsonResult.insert("signature", QJsonValue(QString(result.toBase64())));

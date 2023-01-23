@@ -8,6 +8,8 @@ class Author : public QObject
     Q_OBJECT
 public:
     explicit Author(QObject *parent = nullptr);
+    Author(const QJsonObject &jsonObj, QObject *parent = nullptr);
+
     virtual ~Author();
     const QJsonObject toJson() const;
     const QJsonObject toJsonResponse() const;

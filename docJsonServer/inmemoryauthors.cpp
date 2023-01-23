@@ -1,12 +1,18 @@
 #include "inmemoryauthors.h"
-#include "author.h"
 #include <QSharedPointer>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+
+#include "author.h"
 #include "authorfacade.h"
+
 
 InMemoryAuthors::InMemoryAuthors(QObject *parent)
     : IAuthors{parent}
 {
-
+    loadData();
 }
 
 InMemoryAuthors::~InMemoryAuthors()
@@ -71,6 +77,7 @@ bool InMemoryAuthors::addAuthor(QSharedPointer<AuthorFacade> authorFacade)
     author->setName(authorFacade->name());
     _authors[author->hash()] = author;
     _idxAuthorsByEmail[author->email()] = author->hash();
+    saveData();
     return true;
 }
 
@@ -96,4 +103,32 @@ QSharedPointer<Author> InMemoryAuthors::findByToken(const QByteArray &token)
 const bool InMemoryAuthors::hasAuthors() const
 {
     return _authors.count() > 0;
+}
+
+void InMemoryAuthors::loadData()
+{
+    QFile file("./authors.json");
+    if (file.open(QIODevice::ReadOnly)) {
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(file.readAll());
+        QJsonArray jsonArray = jsonDoc.array();
+        for (auto jsonVal: jsonArray) {
+            auto author = QSharedPointer<Author>::create(jsonVal.toObject());
+            _authors[author->hash()] = author;
+            _idxAuthorsByEmail[author->email()] = author->hash();
+        }
+    }
+}
+
+void InMemoryAuthors::saveData()
+{
+    QJsonArray jsonArray;
+    for (const auto &kv: _authors) {
+        jsonArray.append(kv->toJson());
+    }
+    QJsonDocument jsonDoc;
+    jsonDoc.setArray(jsonArray);
+    QFile file("./authors.json");
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(jsonDoc.toJson());
+    }
 }

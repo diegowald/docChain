@@ -8,7 +8,7 @@
 #include "iauthors.h"
 #include "inmemoryauthors.h"
 #include "authorfacade.h"
-
+#include "author.h"
 
 SigningManager::SigningManager(QObject *parent)
     : QObject{parent}
@@ -22,16 +22,16 @@ SigningManager::~SigningManager()
 {}
 
 
-QByteArray SigningManager::createSignature(const QByteArray &author, const QByteArray &payload)
+QByteArray SigningManager::createSignature(const QByteArray &token, const QByteArray &payload)
 {
+    auto authorPtr = _authors->findByToken(token);
     SigningCalculation calculator;
-
     QMutexLocker locker(&_createMutex);
     auto lastId = _blockchain->getLastId();
     auto lastLink = _blockchain->findById(lastId);
-    auto signature = calculate(lastId, author, payload);
+    auto signature = calculate(lastId, authorPtr->hash().toUtf8(), payload);
 
-    QSharedPointer<Link> link = QSharedPointer<Link>::create(author, signature);
+    QSharedPointer<Link> link = QSharedPointer<Link>::create(authorPtr->hash().toUtf8(), signature);
     _blockchain->add(link);
 
     return signature;

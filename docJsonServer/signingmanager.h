@@ -20,7 +20,7 @@ public:
 
     virtual ~SigningManager();
 
-    QByteArray createSignature(const QByteArray &author, const QByteArray &payload);
+    QByteArray createSignature(const QByteArray &token, const QByteArray &payload);
 
     SignatureValidation isValidSignature(const QByteArray &payload, const QByteArray &signature);
 

@@ -32,6 +32,10 @@ public:
     virtual QVector<QSharedPointer<Author> > authors() override;
     virtual QSharedPointer<Author> findByToken(const QByteArray &token) override;
     virtual const bool hasAuthors() const override;
+
+private:
+    void loadData();
+    void saveData();
 private:
     QHash<QString, QSharedPointer<Author>> _authors;
     QHash<QString, QString> _idxAuthorsByEmail;

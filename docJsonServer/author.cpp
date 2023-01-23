@@ -10,6 +10,13 @@ Author::Author(QObject *parent)
 Author::~Author()
 {}
 
+Author::Author(const QJsonObject &jsonObj, QObject *parent): QObject(parent)
+{
+    _name = jsonObj["name"].toString();
+    _email = jsonObj["email"].toString();
+    _password = jsonObj["password"].toString();
+}
+
 const QJsonObject Author::toJson() const
 {
     QJsonObject jsonObj;

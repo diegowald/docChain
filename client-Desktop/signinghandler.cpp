@@ -28,6 +28,7 @@ void SigningHandler::createSignature(const QByteArray &author, const QByteArray 
     jsonDoc.setObject(jsonObj);
     QMap<QString, QString> headers;
     headers["api_key"] = "SecretKey";
+    headers["token"] = _token;
     requestPOST("createSignature", "v1/createSignature", headers, jsonDoc);
 }
 
@@ -35,11 +36,18 @@ void SigningHandler::validateSignature(const QByteArray& payload, const QByteArr
 {
     QJsonObject jsonObj;
     jsonObj.insert("signature", QJsonValue::fromVariant(signature.toBase64()));
-    jsonObj.insert("payload", QJsonValue::fromVariant(payload.toBase64()));
+    QByteArray payload2Send;
+    if (payload.length() > 2048) {
+        payload2Send = QCryptographicHash::hash(payload, QCryptographicHash::Algorithm::Md5);
+    } else {
+        payload2Send = payload;
+    }
+    jsonObj.insert("payload", QJsonValue::fromVariant(payload2Send.toBase64()));
     QJsonDocument jsonDoc;
     jsonDoc.setObject(jsonObj);
     QMap<QString, QString> headers;
     headers["api_key"] = "SecretKey";
+    headers["token"] = _token;
     requestPOST("validateSignature", "v1/isValidSignature", headers, jsonDoc);
 }
 
