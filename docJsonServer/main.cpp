@@ -51,14 +51,18 @@ int main(int argc, char *argv[])
 
     httpServer.route("/v1/createSignature", QHttpServerRequest::Method::Post,
                      [&signingMgr](const QHttpServerRequest &request) {
+        qDebug() << "createSignature";
         if (!checkApiKeyHeader(request.headers())) {
+            qDebug() << "unauthorized -> no api key";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
         if (!isLoggedIn(request.headers(), signingMgr)) {
+            qDebug() << "Unauthorized -> no valid token";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
         const auto json = byteArrayToJsonObject(request.body());
         if (!json || !json->contains("payload")){
+            qDebug() << "Bad Request -> No payload found";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
         }
 
@@ -74,14 +78,18 @@ int main(int argc, char *argv[])
 
     httpServer.route("/v1/isValidSignature", QHttpServerRequest::Method::Post,
                      [&signingMgr](const QHttpServerRequest &request) {
+        qDebug() << "IsValidSignature";
         if (!checkApiKeyHeader(request.headers())) {
+            qDebug() << "unauthorized -> no api key";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
         if (!isLoggedIn(request.headers(), signingMgr)) {
+            qDebug() << "Unauthorized -> no valid token";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
         const auto json = byteArrayToJsonObject(request.body());
         if (!json || !json->contains("signature") || !json->contains("payload")){
+            qDebug() << "Bad Request -> No payload or signature found";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
         }
 
@@ -98,11 +106,14 @@ int main(int argc, char *argv[])
 
     httpServer.route("/v1/login1", QHttpServerRequest::Method::Post,
                      [&signingMgr](const QHttpServerRequest &request) {
+        qDebug() << "login1";
         if (!checkApiKeyHeader(request.headers())) {
+            qDebug() << "unauthorized -> no api key";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
         const auto json = byteArrayToJsonObject(request.body());
         if (!json || !json->contains("email")){
+            qDebug() << "Bad Request -> No email found";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
         }
         QString email = json->value("email").toString();
@@ -112,16 +123,20 @@ int main(int argc, char *argv[])
             jsonResult.insert("challenge", QJsonValue(result.second));
             return QHttpServerResponse(jsonResult, QHttpServerResponder::StatusCode::Accepted);
         }
+        qDebug() << "Unauthorized -> bad Challenge";
         return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
     });
 
     httpServer.route("/v1/login2", QHttpServerRequest::Method::Post,
                      [&signingMgr](const QHttpServerRequest &request) {
+        qDebug() << "Login2";
         if (!checkApiKeyHeader(request.headers())) {
+            qDebug() << "unauthorized -> no api key";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
         const auto json = byteArrayToJsonObject(request.body());
         if (!json || !json->contains("email") || !json->contains("challengeResult")){
+            qDebug() << "Bad Request -> No email or challenge result found";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
         }
         QString email = json->value("email").toString();
@@ -131,23 +146,27 @@ int main(int argc, char *argv[])
             QJsonObject jsonResult;
             jsonResult.insert("response", result.second);
             return QHttpServerResponse(jsonResult, QHttpServerResponder::StatusCode::Accepted);
-        } else {
-            return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
+        qDebug() << "Unaithorized -> bad challenge response";
+        return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
     });
 
     httpServer.route("/v1/addUser", QHttpServerRequest::Method::Post,
                      [&signingMgr](const QHttpServerRequest &request) {
+        qDebug() << "addUser";
         if (!checkApiKeyHeader(request.headers())) {
+            qDebug() << "unauthorized -> no api key";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
 
         if (signingMgr.hasAuthors() && !isLoggedIn(request.headers(), signingMgr)) {
+            qDebug() << "unauthorized -> no token";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::Unauthorized);
         }
 
         const auto json = byteArrayToJsonObject(request.body());
         if (!json || !json->contains("email") || !json->contains("password")){
+            qDebug() << "Bad request -> No email or password";
             return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
         }
         QString email = json->value("email").toString();
